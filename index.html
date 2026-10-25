@@ -31,6 +31,7 @@
     color: #f3ead2; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; }
   #menu button.cur { border-color: #ffd23f; background: #4a3a28; }
   #menu button.done { color: #7be495; }
+  #menu button.locked { opacity: .45; cursor: not-allowed; }
   #hint { color: #b9aed1; font-size: 13px; text-align: center; max-width: 480px; margin-top: 10px; line-height: 1.5; }
   #status { color: #7be495; font-size: 14px; min-height: 18px; text-align: center; margin-top: 4px; }
 
@@ -58,8 +59,7 @@
   <button id="resetBtn" class="secondary">↻ Reset</button>
   <div id="levelName">Level 1 — Warm-up</div>
   <button id="menuBtn" class="secondary">Levels</button>
-  <button id="soundBtn" class="secondary">🔊 Sound</button>
-  <button id="artBtn" class="secondary">🎨 Art: Drawn</button>
+  <button id="settingsBtn" class="secondary">⚙️ Settings</button>
 </div>
 <div id="wrap">
   <canvas id="game" width="480" height="640"></canvas>
@@ -68,6 +68,14 @@
     <h2 id="ovTitle">Level Complete!</h2>
     <p id="ovText"></p>
     <button id="ovBtn">Next level →</button>
+  </div></div>
+  <div id="settings" class="overlay"><div class="box">
+    <h2>Settings</h2>
+    <p style="margin:0 0 14px;color:#ddd2f0;font-size:15px">Toggles save on this device.</p>
+    <button id="musicToggle" class="secondary" style="display:block;width:100%;margin:6px 0">Music: ON</button>
+    <button id="soundToggle" class="secondary" style="display:block;width:100%;margin:6px 0">Sound: ON</button>
+    <button id="hapticsToggle" class="secondary" style="display:block;width:100%;margin:6px 0">Haptics: ON</button>
+    <button id="settingsClose" style="display:block;width:100%;margin:14px 0 0">Done</button>
   </div></div>
 </div>
 <div id="status"></div>
@@ -81,8 +89,8 @@ Poison kills goblins. Gold wins only when 30+ pieces reach the hero's chamber <i
 is clear of goblins, lava and poison — some levels need gold from two pockets.
 Wrong pin? You'll find out fast. Retry is instant.<br>
 Original game, original art — no copied characters, names or assets.<br>
-<b>Unified build:</b> all 25 levels, both art styles (code-drawn + generated sprites — switch with the 🎨 button), gold progress bar, hazard legend and haptics.<br>
-<b>Music:</b> an original chiptune loop synthesized live in the game (composed in code — the Gen AI audio route is region-blocked for this account, so no AI-generated track exists yet); the 🔊 button mutes music and effects together.</p>
+<b>Unified build:</b> all 25 levels, generated-sprite art, level progression, gold progress bar, hazard legend and haptics.<br>
+<b>Music:</b> an original chiptune loop synthesized live in the game (composed in code — the Gen AI audio route is region-blocked for this account, so no AI-generated track exists yet); use the ⚙️ Settings button for music, sound and haptics.</p>
 <script>
 'use strict';
 /* Pinfall Rescue — pull-the-pin puzzle prototype.
@@ -403,8 +411,8 @@ var ART = { hero: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAFoCAYAAAD
 var heroImg = (typeof Image !== 'undefined') ? new Image() : {}; heroImg.src = ART.hero;
 var goblinImg = (typeof Image !== 'undefined') ? new Image() : {}; goblinImg.src = ART.goblin;
 var caveImg = (typeof Image !== 'undefined') ? new Image() : {}; caveImg.src = ART.cave;
-var artMode = 'drawn';
-try { if (typeof localStorage !== 'undefined') { var sa = localStorage.getItem('pinfall-art'); if (sa === 'real' || sa === 'drawn') artMode = sa; } } catch (e) {}
+var artMode = 'real'; /* Art is always the generated-sprite look now; the code-drawn branch below is kept as a fallback but never selected. */
+try { if (typeof localStorage !== 'undefined') localStorage.setItem('pinfall-art', 'real'); } catch (e) {}
 /* ---------------- rendering + UI (browser only) ---------------- */
 /* Art direction: dark cartoon cave. Chunky readable shapes at phone size, all
    drawn in code (no image assets, so the game stays one small file and scales
@@ -853,6 +861,7 @@ function render(sim, ctx) {
   };
 });
 
+function isLevelUnlocked(i, doneSet) { return i === 0 || !!doneSet[i] || !!doneSet[i - 1]; }
 function boot() {
   var canvas = document.getElementById('game');
   var ctx = canvas.getContext('2d');
@@ -865,7 +874,8 @@ function boot() {
   var menuEl = document.getElementById('menu');
   var done = {};
   try { (JSON.parse(localStorage.getItem('pinfall-complete') || '[]')).forEach(function (i) { done[i] = true; }); } catch (e) {}
-  var cur = 0, sim = null, overShown = false, audioCtx = null, soundOn = true;
+  var cur = 0, sim = null, overShown = false, audioCtx = null, soundOn = true, musicOn = true, hapticsOn = true;
+  try { if (typeof localStorage !== 'undefined') { var sm = localStorage.getItem('pinfall-sound'); if (sm === '0') soundOn = false; var mm = localStorage.getItem('pinfall-music'); if (mm === '0') musicOn = false; var hm = localStorage.getItem('pinfall-haptics'); if (hm === '0') hapticsOn = false; } } catch (e) {}
   function beep(f, d, type) {
     if (!soundOn) return;
     try {
@@ -878,14 +888,28 @@ function boot() {
       o.start(); o.stop(audioCtx.currentTime + d);
     } catch (e) {}
   }
+  function buzz(p) {
+    if (!hapticsOn) return;
+    try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {}
+  }
+  function applyAudio() {
+    try { if (typeof PinfallMusic !== 'undefined') PinfallMusic.setMuted(!(musicOn && soundOn)); } catch (e) {}
+  }
+  function syncSettingsUI() {
+    var mt = document.getElementById('musicToggle'); if (mt) mt.textContent = 'Music: ' + (musicOn ? 'ON' : 'OFF');
+    var st = document.getElementById('soundToggle'); if (st) st.textContent = 'Sound: ' + (soundOn ? 'ON' : 'OFF');
+    var ht = document.getElementById('hapticsToggle'); if (ht) ht.textContent = 'Haptics: ' + (hapticsOn ? 'ON' : 'OFF');
+  }
   function buildMenu() {
     menuEl.innerHTML = '';
     LEVELS.forEach(function (lv, i) {
       var b = document.createElement('button');
-      b.textContent = (i + 1) + (done[i] ? ' ✓' : '');
+      var locked = !isLevelUnlocked(i, done);
+      b.textContent = locked ? '🔒 ' + (i + 1) : (i + 1) + (done[i] ? ' ✓' : '');
       if (i === cur) b.className = 'cur';
       if (done[i]) b.className += ' done';
-      b.onclick = function () { load(i); };
+      if (locked) { b.className += ' locked'; b.disabled = true; b.title = 'Complete level ' + i + ' first'; }
+      else { b.onclick = function () { load(i); }; }
       menuEl.appendChild(b);
     });
   }
@@ -899,6 +923,7 @@ function boot() {
     ovBtn.onclick = fn; overlay.classList.add('show');
   }
   function load(i) {
+    if (!isLevelUnlocked(i, done)) return;
     cur = i; sim = buildGrid(LEVELS[i]); overShown = false;
     levelName.textContent = 'Level ' + (i + 1) + ' — ' + LEVELS[i].name;
     overlay.classList.remove('show');
@@ -910,7 +935,7 @@ function boot() {
   function finish() {
     if (overShown) return; overShown = true;
     if (sim.state === 'win') {
-      try { if (navigator.vibrate) navigator.vibrate([40, 40, 80]); } catch (e) {}
+      buzz([40, 40, 80]);
       try { if (typeof PinfallMusic !== 'undefined') PinfallMusic.playWin(); } catch (e) {}
       done[cur] = true;
       try { localStorage.setItem('pinfall-complete', JSON.stringify(Object.keys(done).map(Number))); } catch (e) {}
@@ -920,7 +945,7 @@ function boot() {
         function () { load(cur < LEVELS.length - 1 ? cur + 1 : 0); });
       buildMenu();
     } else if (sim.state === 'fail') {
-      try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) {}
+      buzz(120);
       try { if (typeof PinfallMusic !== 'undefined') PinfallMusic.playFail(); } catch (e) {}
       beep(160, 0.3, 'sawtooth');
       var why = sim.cause === 'lava' ? 'Lava touched the hero. Cool it with water first.' :
@@ -939,7 +964,7 @@ function boot() {
       if (!p.pulled && gx >= p.x - 1 && gx < p.x + p.w + 1 && gy >= p.y - 1 && gy < p.y + 3) {
         if (pullPin(sim, i)) {
           beep(520, 0.08, 'triangle');
-          try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+          buzz(12);
           var ph = document.getElementById('pinHint'); if (ph) ph.style.display = 'none';
           statusEl.textContent = 'Pin pulled!';
         }
@@ -948,21 +973,33 @@ function boot() {
     }
   });
   document.getElementById('resetBtn').onclick = function () { load(cur); };
-  document.getElementById('soundBtn').onclick = function () {
-    soundOn = !soundOn;
-    this.textContent = soundOn ? '🔊 Sound' : '🔇 Muted';
-    try { if (typeof PinfallMusic !== 'undefined') PinfallMusic.setMuted(!soundOn); } catch (e) {}
+  document.getElementById('settingsBtn').onclick = function () {
+    syncSettingsUI();
+    var so = document.getElementById('settings'); if (so) so.classList.add('show');
   };
-  document.getElementById('artBtn').onclick = function () {
-    artMode = (artMode === 'real') ? 'drawn' : 'real';
-    try { localStorage.setItem('pinfall-art', artMode); } catch (e) {}
-    this.textContent = (artMode === 'real') ? '🎨 Art: Real' : '🎨 Art: Drawn';
+  document.getElementById('settingsClose').onclick = function () {
+    var so = document.getElementById('settings'); if (so) so.classList.remove('show');
+  };
+  document.getElementById('musicToggle').onclick = function () {
+    musicOn = !musicOn;
+    try { localStorage.setItem('pinfall-music', musicOn ? '1' : '0'); } catch (e) {}
+    applyAudio(); syncSettingsUI();
+  };
+  document.getElementById('soundToggle').onclick = function () {
+    soundOn = !soundOn;
+    try { localStorage.setItem('pinfall-sound', soundOn ? '1' : '0'); } catch (e) {}
+    applyAudio(); syncSettingsUI();
+  };
+  document.getElementById('hapticsToggle').onclick = function () {
+    hapticsOn = !hapticsOn;
+    try { localStorage.setItem('pinfall-haptics', hapticsOn ? '1' : '0'); } catch (e) {}
+    syncSettingsUI();
   };
   document.getElementById('menuBtn').onclick = function () {
     menuEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
-  (function () { var ab = document.getElementById('artBtn'); if (ab) ab.textContent = (artMode === 'real') ? '🎨 Art: Real' : '🎨 Art: Drawn'; })();
   try { if (typeof PinfallMusic !== 'undefined') PinfallMusic.unlockOnGesture(); } catch (e) {}
+  applyAudio(); syncSettingsUI();
   load(0);
   (function loop() {
     requestAnimationFrame(loop);
@@ -985,7 +1022,7 @@ if (typeof document !== 'undefined' && typeof requestAnimationFrame !== 'undefin
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { GW: GW, GH: GH, LEVELS: LEVELS, EMPTY: EMPTY, WALL: WALL, WATER: WATER,
     LAVA: LAVA, POISON: POISON, GOLD: GOLD, PIN: PIN, WIN_GOLD: WIN_GOLD,
-    buildGrid: buildGrid, stepSim: stepSim, pullPin: pullPin, countGoldInChamber: countGoldInChamber };
+    buildGrid: buildGrid, stepSim: stepSim, pullPin: pullPin, countGoldInChamber: countGoldInChamber, isLevelUnlocked: isLevelUnlocked };
 }
 </script>
 </body>
