@@ -4,30 +4,30 @@ The code is ready. Everything below needs a human with accounts — none of
 it can be done from this sandbox. Work top to bottom; step 0 comes before
 any release build.
 
-## Skip the $25: Samsung Galaxy Store
+## Skip the $25: what actually works for a solo developer
 
-If the Play fee is the blocker, Galaxy Store is the legitimate $0 route —
-not a hack. It is free for individual developers, pre-installed on every
-Samsung phone (Samsung is the largest Android brand in India), and AdMob
-treats it as a supported store, so full ad serving unlocks after the
-readiness review. Sideloading without any store stays limited forever —
-Galaxy Store does not.
+CORRECTION (25 Oct 2026): Galaxy Store was listed here first as a free
+solo route — that was wrong, and it has been removed. Samsung requires
+Commercial Seller status to publish Android apps, even free ones, and
+that needs a D-U-N-S number (a registered business) plus bank/PayPal
+details. A solo developer without a company cannot publish Android apps
+there; the private/free seller tier cannot distribute Android content.
 
-What changes vs the Play path below:
+### Amazon Appstore (the $0 solo route)
 
+- Amazon's own docs: individuals can open a developer account, no
+  company required — there is a Sole Proprietorship account type made
+  for students and amateur developers, and registration is free.
+- Amazon Appstore is an AdMob-supported store, so linking the listing
+  unlocks full ad serving after the readiness review.
+- Caveats: its reach in India is small (it is not pre-installed on most
+  Indian phones; users install the Amazon Appstore app), and on Fire
+  tablets the AdMob banner cannot load at all (no Google Play Services
+  on Fire OS) — the game still plays, ads just don't show there.
 - Same build, same package (`com.pinfall.rescue`), same listing text,
-  same privacy policy — nothing in the code changes. Galaxy accepts
-  APK or AAB; upload the same release bundle.
-- Samsung account: register as an individual developer (free, basic
-  verification). Review takes 1–3 business days.
-- In AdMob, add the app by selecting Samsung Galaxy Store and entering
-  the exact package name, then link it once the listing is live. The
-  readiness review then takes about 2–3 days, after which the
-  limited-serving cap lifts and ads serve fully.
-- Samsung takes no cut of AdMob revenue (their commission applies to paid
-  apps and Samsung IAP sales, not to ads in a free app).
-- Play later: nothing is lost. The same build and listing go to Play
-  whenever you decide the $25 is worth it.
+  same privacy policy as the Play path below.
+- Play later: nothing is lost. The same bundle goes to Play whenever
+  you decide the $25 is worth it.
 
 ## 0. Swap the AdMob test IDs (before any release build)
 
