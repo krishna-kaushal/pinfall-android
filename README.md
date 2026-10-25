@@ -22,7 +22,7 @@ debug APK to Play** — it is for sideload testing only.
 
 1. Open this folder in Android Studio (or copy `app/` into a new Empty Activity
    project with package `com.pinfall.rescue`).
-2. Install API 36 (SDK Manager) so compileSdk/targetSdk are both 36.
+2. Install API 36 (SDK Manager) — the Gradle project already sets compileSdk 36 and targetSdk 36.
 3. Build → Generate Signed App Bundle / APK → create a **new upload key**
    (keep it safe — losing it locks you out of future updates; enable Play App
    Signing so Google holds the final signing key).
@@ -42,8 +42,8 @@ debug APK to Play** — it is for sideload testing only.
 
 - The CLI build links against the android-34 platform jar (the newest installed
   here) while the manifest declares targetSdk 36. The app uses only long-stable
-  APIs, so this is safe for testing; the release build in Android Studio should
-  compile against API 36.
+  APIs, so this is safe for testing; the Gradle release build compiles against
+  API 36 (compileSdk 36 in `app/build.gradle`).
 - `debug.keystore` is intentionally not shipped in the project zip; the build
   script regenerates it if missing, so a rebuild elsewhere needs the old APK
   uninstalled first.

@@ -4,8 +4,7 @@ plugins {
 
 android {
     namespace 'com.pinfall.rescue'
-    // For a Play release build, install API 36 and set compileSdk to 36.
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.pinfall.rescue'
