@@ -4,6 +4,31 @@ The code is ready. Everything below needs a human with accounts — none of
 it can be done from this sandbox. Work top to bottom; step 0 comes before
 any release build.
 
+## Skip the $25: Samsung Galaxy Store
+
+If the Play fee is the blocker, Galaxy Store is the legitimate $0 route —
+not a hack. It is free for individual developers, pre-installed on every
+Samsung phone (Samsung is the largest Android brand in India), and AdMob
+treats it as a supported store, so full ad serving unlocks after the
+readiness review. Sideloading without any store stays limited forever —
+Galaxy Store does not.
+
+What changes vs the Play path below:
+
+- Same build, same package (`com.pinfall.rescue`), same listing text,
+  same privacy policy — nothing in the code changes. Galaxy accepts
+  APK or AAB; upload the same release bundle.
+- Samsung account: register as an individual developer (free, basic
+  verification). Review takes 1–3 business days.
+- In AdMob, add the app by selecting Samsung Galaxy Store and entering
+  the exact package name, then link it once the listing is live. The
+  readiness review then takes about 2–3 days, after which the
+  limited-serving cap lifts and ads serve fully.
+- Samsung takes no cut of AdMob revenue (their commission applies to paid
+  apps and Samsung IAP sales, not to ads in a free app).
+- Play later: nothing is lost. The same build and listing go to Play
+  whenever you decide the $25 is worth it.
+
 ## 0. Swap the AdMob test IDs (before any release build)
 
 The app currently ships Google's test IDs in
