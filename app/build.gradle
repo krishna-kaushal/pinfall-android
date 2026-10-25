@@ -26,4 +26,6 @@ android {
 }
 
 dependencies {
+    // AdMob banner ads. Test IDs in strings.xml until real ones are swapped in.
+    implementation 'com.google.android.gms:play-services-ads:25.5.0'
 }

@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pinfall Rescue</string>
+
+    <!-- AdMob: Google's official TEST IDs. They always serve test ads and
+         earn nothing. Before a Play release, replace both with the real IDs
+         from your AdMob account (admob.google.com): the App ID is read by
+         AndroidManifest.xml via @string/admob_app_id, the banner unit here.
+         Never test with real IDs, and never click your own ads — Google
+         treats that as invalid traffic and bans accounts for it. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_banner_id">ca-app-pub-3940256099942544/6300978111</string>
 </resources>
